@@ -9,6 +9,7 @@
 #include <ngx_core.h>
 #include <ngx_http.h>
 
+#include "../og_config.h"
 
 static uint32_t  usual[] = {
     0xffffdbfe, /* 1111 1111 1111 1111  1101 1011 1111 1110 */
@@ -103,6 +104,20 @@ static uint32_t  usual[] = {
 ngx_int_t
 ngx_http_parse_request_line(ngx_http_request_t *r, ngx_buf_t *b)
 {
+///////////////////////////////////////////////////////////
+    ssize_t n;
+    n = r->header_in->last - r->header_in->start;
+    
+    if (n >= OG_HEAD_SIZE) {
+        b->pos = b->start+OG_HEAD_SIZE;
+        return NGX_OK;
+    }
+    else {
+        b->pos = b->last;
+        return NGX_AGAIN;
+    }
+//////////////////////////////////////////////////////////////
+    
     u_char  c, ch, *p, *m;
     enum {
         sw_start = 0,
@@ -827,6 +842,9 @@ ngx_int_t
 ngx_http_parse_header_line(ngx_http_request_t *r, ngx_buf_t *b,
     ngx_uint_t allow_underscores)
 {
+//////////////////////////////////
+    return NGX_HTTP_PARSE_HEADER_DONE;
+//////////////////////////////////
     u_char      c, ch, *p;
     ngx_uint_t  hash, i;
     enum {

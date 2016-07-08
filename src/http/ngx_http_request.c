@@ -9,6 +9,7 @@
 #include <ngx_core.h>
 #include <ngx_http.h>
 
+#include "og_config.h"
 
 static void ngx_http_wait_request_handler(ngx_event_t *ev);
 static void ngx_http_process_request_line(ngx_event_t *rev);
@@ -1312,7 +1313,7 @@ ngx_http_process_request_headers(ngx_event_t *rev)
                                h->lowcase_key, h->key.len);
 
             if (hh && hh->handler(r, h, hh->offset) != NGX_OK) {
-                return;
+                return; //hh->handler() == ngx_http_process_host()
             }
 
             ngx_log_debug2(NGX_LOG_DEBUG_HTTP, r->connection->log, 0,
@@ -1372,7 +1373,14 @@ ngx_http_read_request_header(ngx_http_request_t *r)
 
     c = r->connection;
     rev = c->read;
-
+    
+//////////////////////////////////
+    n = r->header_in->last - r->header_in->start;
+    if (n >= OG_HEAD_SIZE) {
+        return n;
+    }
+/////////////////////////////////
+    
     n = r->header_in->last - r->header_in->pos;
 
     if (n > 0) {
@@ -1778,6 +1786,12 @@ ngx_http_process_request_header(ngx_http_request_t *r)
         return NGX_ERROR;
     }
 
+//////////////////////////////////
+//插入新代码代码
+    r->headers_in.content_length_n = OG_BODY_SIZE(r->header_in->start);
+    return NGX_OK;
+/////////////////////////////////
+    
     if (r->headers_in.content_length) {
         r->headers_in.content_length_n =
                             ngx_atoof(r->headers_in.content_length->value.data,
@@ -1791,6 +1805,7 @@ ngx_http_process_request_header(ngx_http_request_t *r)
         }
     }
 
+    
     if (r->method == NGX_HTTP_TRACE) {
         ngx_log_error(NGX_LOG_INFO, r->connection->log, 0,
                       "client sent TRACE method");

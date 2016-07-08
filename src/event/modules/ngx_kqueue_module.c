@@ -666,7 +666,7 @@ ngx_kqueue_process_events(ngx_cycle_t *cycle, ngx_msec_t timer,
             continue;
         }
 
-        ev->handler(ev);
+        ev->handler(ev); // == ngx_http_wait_request_handler(ev)
     }
 
     return NGX_OK;
